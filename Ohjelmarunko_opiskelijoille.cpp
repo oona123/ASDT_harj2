@@ -3,21 +3,6 @@
 -testattavat asiat: useiden prosessien käsittely ja yksinkertainen jaetun muistin käyttäminen prosessien välillä tiedonvälittämisessä
 (2p)
 TEHTÄVÄ 1 TEHTY
-
-2) toimiva rinnakkainen säietoteutus missä rotat (tehdyt säikeet) liikkuvat itsenäisesti labyrintissa,, main() - säie odottaa kaikkien rottien pääsemistä suuaukolle ja ohjelma poistuu
--testattavat asiat: useiden säikeiden käsittely omassa ohjelmassa, huom! voinet yhtä hyvin käyttää tässä 1) tehtävän jaettua muistia yhden prosessin sisällä
-(2p)
-
-3) toimiva prosessien välinen jaetun muistin toteutus labyrintin kokoiselle rottien sijaintikartalle (esimerkiksi labyrinttia vastaava kaksi-ulotteinen C-kielen taulukko mihin rotta merkitsee sijaintinsa) joka pysyy koko ajan hallitusti ajantasaisena, toteuta siis eksklusiivinen kirjoitus
--testattavat asiat: prosessien välinen writer-synkronointi semaforia käyttäen
-(2p)
-HUOM! Ei tarvitse välittää tässä pisteluokassa mahdollisesta sijaintipäällekkäisyydestä - karttasijainnit eivät vaikuta ohjelman perustoimintaan, halutessasi voit innovoida miten ottaisit tämän huomioon kartturoinnissa (voi ansaita vaikka lisäpisteitä)
-
-4) toimiva säikeiden välinen toteutus labyrintin kokoiselle rottien sijaintikartalle joka pysyy koko ajan ajantasaisena, toteuta eksklusiivisuus
--testattavat asiat: säikeiden välinen eksklusiivisuus
-(2p)
-HUOM! Kuten yllä
-
 */
 
 /* Kääntäminen g++ -w lipulla tällä hetkellä */
