@@ -2,7 +2,24 @@
 1) toimiva rinnakkainen prosessitoteutus missä rotat (lapsiprosessit) liikkuvat itsenäisesti labyrintissa, parent prosessi odottaa kaikkien rottien pääsemistä suuaukolle ja ohjelma poistuu
 -testattavat asiat: useiden prosessien käsittely ja yksinkertainen jaetun muistin käyttäminen prosessien välillä tiedonvälittämisessä
 (2p)
-TEHTÄVÄ 1 TEHTY
+TEHTÄVÄ 1 TEHTY KOKONAAN
+
+2) toimiva rinnakkainen säietoteutus missä rotat (tehdyt säikeet) liikkuvat itsenäisesti labyrintissa,, main() - säie odottaa kaikkien rottien pääsemistä suuaukolle ja ohjelma poistuu
+-testattavat asiat: useiden säikeiden käsittely omassa ohjelmassa, huom! voinet yhtä hyvin käyttää tässä 1) tehtävän jaettua muistia yhden prosessin sisällä
+(2p)
+TEHTÄVÄ 2 TEHTY KOKONAAN
+
+3) toimiva prosessien välinen jaetun muistin toteutus labyrintin kokoiselle rottien sijaintikartalle (esimerkiksi labyrinttia vastaava kaksi-ulotteinen C-kielen taulukko mihin rotta merkitsee sijaintinsa) joka pysyy koko ajan hallitusti ajantasaisena, toteuta siis eksklusiivinen kirjoitus
+-testattavat asiat: prosessien välinen writer-synkronointi semaforia käyttäen
+(2p)
+HUOM! Ei tarvitse välittää tässä pisteluokassa mahdollisesta sijaintipäällekkäisyydestä - karttasijainnit eivät vaikuta ohjelman perustoimintaan, halutessasi voit innovoida miten ottaisit tämän huomioon kartturoinnissa (voi ansaita vaikka lisäpisteitä)
+TEHTÄVÄ 3 TEHTY KOKONAAN
+
+4) toimiva säikeiden välinen toteutus labyrintin kokoiselle rottien sijaintikartalle joka pysyy koko ajan ajantasaisena, toteuta eksklusiivisuus
+-testattavat asiat: säikeiden välinen eksklusiivisuus
+(2p)
+HUOM! Kuten yllä
+TEHTÄVÄ 4 TEHTY OSITTAIN
 */
 
 /* Kääntäminen g++ -w lipulla tällä hetkellä */
@@ -417,6 +434,10 @@ int aloitaRotta(){
 }
 
 int main(){
+
+    int nRotat = 5; // 5 rottaa
+    string tila = "threads"; // tai "processes"
+
     //Tehtävä1: varataan jaettu muisti
     int shmid = shmget(IPC_PRIVATE, sizeof(int) * KORKEUS * LEVEYS, IPC_CREAT | 0666);
     if (shmid < 0) {
@@ -541,59 +562,51 @@ int main(){
         }
     }
 
-    //Tehtävä1: prosessien luonti fork() avulla
-    pid_t pid = fork();
+    //Tehtävä 3 ja 4: Luodaan semafori tai mutex
+    sem_t *sem = sem_open("/labsem", O_CREAT, 0644, 1);
+    // tai pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
 
-    if (pid < 0) {
-        perror("fork epäonnistui");
-        exit(1);
-    }
-
-    if (pid == 0) {
-        // Tämä on lapsiprosessi
-        cout << "Lapsiprosessi käynnissä (PID: " << getpid() << ")" << endl;
-
-        // Esimerkki: lapsi merkitsee yhden kohdan labyrintissa
-        labyrintti[1][1] = 9;
-
-        // Tulostetaan labyrintin osa lapsen näkökulmasta
-        cout << "Lapsi näkee labyrintin[1][1] = " << labyrintti[1][1] << endl;
-
-        shmdt(labyrintti); // irrota muisti lapsiprosessista
-        exit(0);
-    } else {
-        // Tämä on vanhempi prosessi
-        wait(NULL); // odotetaan lapsen valmistumista
-
-        cout << "Vanhempi prosessi (PID: " << getpid() << ")" << endl;
-        cout << "Vanhempi näkee labyrintin[1][1] = " << labyrintti[1][1] << endl;
-    }
-
-    cout << "Testitulostus: labyrintti[0][1] = " << labyrintti[0][1] << endl;
-
-    //Tehtävä1: rinnakkaiset prosessit
-    int nRotat = 5; // 5 rottaa
-    for(int i = 0; i < nRotat; i++){
-        pid = fork();
-        if(pid == 0){
-            // lapsiprosessi: suorita rotan algoritmi
-            int liikku = aloitaRotta();
-            cout << "Rotta " << i << " liikkuja: " << liikku << endl;
-            exit(0);
+    //Tehtävä 1 ja 2: Rinnakkaisen suorituksen toteutus (Rinnakkaiset prosessit ja säikeet)
+    if (tila == "processes") {
+        //Tehtävä 1: Prosessien luonti fork() avulla
+        for (int i = 0; i < nRotat; i++) {
+            pid_t pid = fork();
+            if (pid == 0) {
+                aloitaRotta();  // lapsiprosessi tekee työnsä
+                exit(0);
+            }
         }
+        // odota lapsiprosessit
+        for (int i = 0; i < nRotat; i++)
+            wait(NULL);
     }
-    // parent odottaa kaikkien lasten valmistumista
-    for(int i = 0; i < nRotat; i++){
-        wait(NULL);
+    else if (tila == "threads") {
+        //Tehtävä 2: Säikeiden luonti pthread_create():lla
+        pthread_t threads[nRotat];
+        for (int i = 0; i < nRotat; i++) {
+            pthread_create(&threads[i], NULL, [](void* arg)->void* {
+                int id = *(int*)arg;
+                aloitaRotta();
+                return nullptr;
+            }, new int(i));
+        }
+
+        // odota säikeet loppuun
+        for (int i = 0; i < nRotat; i++)
+            pthread_join(threads[i], NULL);
     }
 
-    aloitaRotta();
-    //tämän tulee kertoa että kaikki rotat ovat päässeet ulos labyrintista
-    //viimeinen jäädytetty kuva sijaintikartasta olisi hyvä olla todistamassa sitä
-    std::cout << "Kaikki rotat ulkona!" << endl;
-
+    //Tehtävä 3 ja 4: vapautetaan semafori ja mutex
+    sem_close(sem);
+    sem_unlink("/labsem");
+    //pthread_mutex_destroy(&mutex);
     //Tehtävä1: irroitetaan ja vapautetaan jaettu muisti
     shmdt(labyrintti);
     shmctl(shmid, IPC_RMID, NULL);
+
+        //tämän tulee kertoa että kaikki rotat ovat päässeet ulos labyrintista
+    //viimeinen jäädytetty kuva sijaintikartasta olisi hyvä olla todistamassa sitä
+    std::cout << "Kaikki rotat ulkona!" << endl;
+
     return 0;
 }
